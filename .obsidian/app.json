@@ -1,0 +1,10 @@
+{
+  "useMarkdownLinks": false,
+  "newLinkFormat": "shortest",
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "00-inbox",
+  "attachmentFolderPath": "90-archive/attachments",
+  "showFrontmatter": true,
+  "userIgnoreFilters": ["_templates/", "scripts/", "90-archive/"]
+}

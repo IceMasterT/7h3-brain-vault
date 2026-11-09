@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Blocks commits that would put secrets or broken structure into history.
+# Catches what was typed in Obsidian, which no AI hook can see.
+# Enabled by: git config core.hooksPath .githooks (install.sh and doctor --fix do this).
+root="$(git rev-parse --show-toplevel)" || exit 1
+# Scan only the lines this commit adds, in notes and config. The engine's own
+# source (which contains the secret patterns themselves) is not memory content.
+if ! git diff --cached --diff-filter=ACM -U0 --no-color -- . \
+       ':(exclude)scripts/' ':(exclude).claude/hooks/' ':(exclude).githooks/' | grep -E '^\+[^+]' | \
+     python3 -c '
+import sys; sys.path.insert(0, sys.argv[1])
+from brainlib.policy import find_secret
+label = find_secret(sys.stdin.read())
+if label:
+    print(f"pre-commit: staged changes contain something that looks like a {label}. Remove it, then commit.", file=sys.stderr)
+    sys.exit(1)
+' "$root/scripts"; then
+  exit 1
+fi
+if ! python3 "$root/scripts/brain.py" health --strict --brief >/dev/null; then
+  python3 "$root/scripts/brain.py" health --brief
+  echo "pre-commit: vault health has errors. See: python3 scripts/brain.py health" >&2
+  exit 1
+fi
+exit 0

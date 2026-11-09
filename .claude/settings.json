@@ -1,0 +1,84 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__brain__brain_wake_up",
+      "mcp__brain__brain_recall",
+      "mcp__brain__brain_search",
+      "mcp__brain__brain_read",
+      "mcp__brain__brain_facts",
+      "mcp__brain__brain_recent",
+      "mcp__brain__brain_health",
+      "Bash(python3 scripts/brain.py search:*)",
+      "Bash(python3 scripts/brain.py recall:*)",
+      "Bash(python3 scripts/brain.py read:*)",
+      "Bash(python3 scripts/brain.py facts:*)",
+      "Bash(python3 scripts/brain.py health:*)",
+      "Bash(python3 scripts/brain.py wake-up)",
+      "Bash(python3 scripts/brain.py triage-suggest)",
+      "Bash(python3 scripts/brain.py fading:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./CLAUDE.local.md)",
+      "Edit(./.claude/settings.json)",
+      "Edit(./.claude/hooks/**)",
+      "Edit(./.githooks/**)",
+      "Edit(./scripts/brainlib/policy.py)",
+      "Bash(rm:*)",
+      "Bash(rmdir:*)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean:*)",
+      "Bash(sudo:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)"
+    ]
+  },
+  "enabledMcpjsonServers": ["brain"],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/recall.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/save-nudge.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

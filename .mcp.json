@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "brain": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/scripts/mcp_server.py", "--agent", "claude-code"]
+    }
+  }
+}
