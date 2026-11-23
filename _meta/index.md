@@ -22,6 +22,5 @@ Every new note is listed here under the right heading. The brain tools do it aut
 ## People
 
 ## Projects
-- [[afpmg-rev-g]]: AFPMG Rev G-A1, 98% shaft-to-DC generator concept with loss model and 3D model.
 
 ## Drafts
