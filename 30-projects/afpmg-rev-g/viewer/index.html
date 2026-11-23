@@ -1,0 +1,420 @@
+<title>AFPMG Rev G-A1</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: engineering drawing sheet. Viewer on top like a sheet's main view, data blocks below like a title block and tables. */
+:root {
+  --bg: #eef0f2;
+  --panel: #ffffff;
+  --ink: #1b2229;
+  --muted: #5b6672;
+  --rule: #d3d8de;
+  --accent: #b5652b;          /* copper winding */
+  --steel: #59646f;
+  --north: #c23a30;
+  --south: #2f5fb8;
+  --ok: #2f7d4f;
+  --warn: #a86a0a;
+  --bad: #b3362c;
+  --viewer-bg: #dfe3e7;
+  --font-display: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --b-cu: #c97a3f; --b-ac: #e0a36e; --b-mag: #8a6bb8; --b-wind: #4f8fb0; --b-brg: #6b7b8c; --b-conv: #3f8f6b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15191e; --panel: #1d232a; --ink: #e6e9ec; --muted: #9aa5b1; --rule: #2e3740;
+    --accent: #e0925a; --steel: #a3adb7; --north: #e2645a; --south: #6b95e6;
+    --ok: #5cbf86; --warn: #e0a84a; --bad: #ef7468; --viewer-bg: #10141a;
+    --b-cu: #d98a4f; --b-ac: #ecb989; --b-mag: #a68ad4; --b-wind: #6aaed0; --b-brg: #8796a6; --b-conv: #5cb38c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15191e; --panel: #1d232a; --ink: #e6e9ec; --muted: #9aa5b1; --rule: #2e3740;
+  --accent: #e0925a; --steel: #a3adb7; --north: #e2645a; --south: #6b95e6;
+  --ok: #5cbf86; --warn: #e0a84a; --bad: #ef7468; --viewer-bg: #10141a;
+  --b-cu: #d98a4f; --b-ac: #ecb989; --b-mag: #a68ad4; --b-wind: #6aaed0; --b-brg: #8796a6; --b-conv: #5cb38c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: 0.01em; }
+h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 700; line-height: 1.1; }
+h2 { font-size: 22px; font-weight: 600; }
+h3 { font-size: 17px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.mono, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+header { display: grid; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--font-mono); font-size: 12px; padding: 3px 9px; border: 1px solid var(--rule); border-radius: 999px; color: var(--muted); background: var(--panel); }
+.chip.warn { color: var(--warn); border-color: currentColor; }
+
+/* viewer */
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0; border: 1px solid var(--rule); background: var(--panel); border-radius: 6px; overflow: hidden; }
+.viewport { position: relative; min-height: 560px; background: var(--viewer-bg); }
+#c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.readout { position: absolute; left: 12px; bottom: 12px; right: 12px; display: flex; justify-content: space-between; gap: 12px; pointer-events: none; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.readout .pick { color: var(--ink); background: color-mix(in srgb, var(--panel) 85%, transparent); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--rule); max-width: 70%; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.controls { border-left: 1px solid var(--rule); padding: 16px; display: grid; gap: 16px; align-content: start; }
+.ctl { display: grid; gap: 6px; }
+.ctl label, .ctl .lab { font-size: 13px; font-weight: 500; }
+.row { display: flex; gap: 6px; flex-wrap: wrap; }
+button { font: 500 13px var(--font-body); color: var(--ink); background: var(--bg); border: 1px solid var(--rule); border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.layers { display: grid; gap: 4px; }
+.layers label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 400; cursor: pointer; }
+.layers input { accent-color: var(--accent); }
+.legend { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+/* figures */
+.figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.fig { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; display: grid; gap: 2px; }
+.fig .v { font-family: var(--font-display); font-size: 30px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.fig .k { font-size: 13px; color: var(--muted); }
+.fig .v.ok { color: var(--ok); } .fig .v.warn { color: var(--warn); }
+
+section.block { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; display: grid; gap: 14px; min-width: 0; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+td.n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; padding-right: 0; padding-left: 10px; }
+th.n { text-align: right; padding-right: 0; padding-left: 10px; }
+tr.hl td { font-weight: 600; }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart text { font-family: var(--font-mono); fill: var(--muted); font-size: 11px; }
+.chart .lbl { fill: var(--ink); font-family: var(--font-body); font-size: 12.5px; }
+.keys { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--muted); }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 72ch; }
+.note { font-size: 13px; color: var(--muted); }
+.status { font-family: var(--font-mono); font-size: 12px; }
+.status.no { color: var(--bad); } .status.part { color: var(--warn); } .status.yes { color: var(--ok); }
+
+@media (max-width: 900px) {
+  .stage { grid-template-columns: 1fr; }
+  .controls { border-left: 0; border-top: 1px solid var(--rule); }
+  .viewport { min-height: 420px; }
+  .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .two { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">AFPMG research series · Rev G candidate · 23 Nov 2026</div>
+    <h1>AFPMG Rev G-A1 axial-flux generator</h1>
+    <p>A single coreless stator between two steel-backed rotors on one shaft, re-sized from Rev 3.1 to cut shaft-to-DC loss from 133 W to about 48–52 W at 2.4 kW and 2,400 RPM. The 3D model is built directly from the design values below.</p>
+    <div class="chips">
+      <span class="chip warn">Analytical concept. Not a release drawing.</span>
+      <span class="chip">12 poles / 9 coils · 240 Hz</span>
+      <span class="chip">48–56.8 V DC bus</span>
+      <span class="chip">Model calibrated to Rev 3.1 within 0.5 W</span>
+    </div>
+  </header>
+
+  <div class="stage">
+    <div class="viewport">
+      <canvas id="c" aria-label="Interactive 3D model of the AFPMG Rev G-A1 generator"></canvas>
+      <div class="loading" id="loading">Loading 3D model…</div>
+      <div class="readout"><span class="pick" id="pick">Click a part to name it</span><span>drag to orbit · scroll to zoom</span></div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <span class="lab">View</span>
+        <div class="row">
+          <button type="button" id="v-iso">Isometric</button>
+          <button type="button" id="v-axial">Along shaft</button>
+          <button type="button" id="v-side">Side</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="explode">Exploded view</label>
+        <input type="range" id="explode" min="0" max="1" step="0.01" value="0">
+      </div>
+      <div class="ctl">
+        <span class="lab">Display</span>
+        <div class="row">
+          <button type="button" id="t-section" aria-pressed="false">Half section</button>
+          <button type="button" id="t-spin" aria-pressed="false">Spin rotors</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <span class="lab">Layers</span>
+        <div class="layers" id="layers"></div>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--north)"></i>North pole up</span>
+        <span><i class="sw" style="background:var(--south)"></i>South pole up</span>
+        <span><i class="sw" style="background:var(--accent)"></i>Litz coils, 3 shades for phases A, B, C</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="figs">
+    <div class="fig"><span class="v warn num">97.87%</span><span class="k">Shaft to DC at 2.4 kW, G-series converter (52.2 W loss)</span></div>
+    <div class="fig"><span class="v ok num">98.04%</span><span class="k">Same machine with the stretch converter (47.9 W loss)</span></div>
+    <div class="fig"><span class="v num">48.98 W</span><span class="k">Loss ceiling for 98.0% at 2.4 kW (61.22 W at 3 kW)</span></div>
+    <div class="fig"><span class="v num">94.77%</span><span class="k">Rev 3.1 reproduced by the same model (spec: 94.75%)</span></div>
+  </div>
+
+  <section class="block chart">
+    <h2>Loss budget at 2,400 W DC</h2>
+    <p class="note">Each bar is the full shaft-to-DC loss from the same calibrated model. The dashed line is the 98.0% ceiling. Bars are drawn to one scale.</p>
+    <div class="scroll"><svg id="lossChart" viewBox="0 0 760 270" role="img" aria-label="Stacked loss bars per design compared with the 48.98 W ceiling"></svg></div>
+    <div class="keys" id="keys"></div>
+  </section>
+
+  <div class="two">
+    <section class="block">
+      <h2>What changed from Rev 3.1</h2>
+      <div class="scroll">
+      <table>
+        <thead><tr><th>Item</th><th>Rev 3.1</th><th>G-A1</th></tr></thead>
+        <tbody>
+          <tr><td>Magnet annulus</td><td class="mono">r 60–105 mm</td><td class="mono">r 75–126 mm</td></tr>
+          <tr><td>Magnets</td><td class="mono">N45SH, 8 mm, 2.4 kg</td><td class="mono">Br 1.42 T class (N50SH), 12 mm, 4.9 kg</td></tr>
+          <tr><td>Stator</td><td class="mono">6.0 mm, 5 T/coil</td><td class="mono">14.0 mm, 4 T/coil</td></tr>
+          <tr><td>Litz strand</td><td class="mono">0.254 mm</td><td class="mono">0.10 mm (≈1,650 strands/turn)</td></tr>
+          <tr><td>Phase resistance, 80 °C</td><td class="mono">7.95 mΩ</td><td class="mono">2.17 mΩ incl. bus</td></tr>
+          <tr><td>Magnetic gap</td><td class="mono">8.8 mm</td><td class="mono">16.8 mm (1.4 air each side)</td></tr>
+          <tr><td>Rotor disc</td><td class="mono">Ø216 × 14</td><td class="mono">Ø260 × 16, 13 mm iron</td></tr>
+          <tr><td>Bearings</td><td class="mono">7205 DB pair + 6205</td><td class="mono">2 × 6005 hybrid, wave spring</td></tr>
+          <tr><td>Converter</td><td class="mono">1 MOSFET/switch, 40 kHz</td><td class="mono">3 in parallel, 20 kHz, on collar</td></tr>
+          <tr><td>Cold EMF, L-L rms</td><td class="mono">28.7 V</td><td class="mono">28.65 V (same AFE headroom rule)</td></tr>
+          <tr><td>Axial pull</td><td class="mono">3.9 kN</td><td class="mono">5.2 kN, closed by 36.8 mm spacer</td></tr>
+          <tr><td>Tip speed</td><td class="mono">27.1 m/s</td><td class="mono">32.4 m/s</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+    <section class="block">
+      <h2>Why G-A won the comparison</h2>
+      <ul class="plain">
+        <li>The bottleneck in Rev 3.1 is copper width at the inner radius. Moving the ring out to r 75 mm and thickening the stator gives 2.6× the copper area per leg.</li>
+        <li>G-C (two stators, three rotors) adds two more rotor faces spinning in narrow gaps. In this model that windage cancels its copper gain: 53.8 W against 52.2 W.</li>
+        <li>G-B (16 poles) has shorter pole pitch, so more field leaks between poles and strand eddy loss rises with frequency: 54.8 W.</li>
+        <li>Once copper is fixed, the floor is set by windage (11.7 W) and the converter (13.6 W). Further gains must come from those two.</li>
+      </ul>
+      <p class="note">Sweep: 59,040 geometries across 1–3 stators, 12/9, 16/12 and 20/15, then an integer-turn refinement. Same converter, bearing and lead assumptions for every candidate.</p>
+    </section>
+  </div>
+
+  <div class="two">
+    <section class="block">
+      <h2>Full results</h2>
+      <div class="scroll">
+      <table id="results">
+        <thead><tr><th>Design</th><th class="n">2.4 kW loss</th><th class="n">η 2.4 kW</th><th class="n">3 kW loss</th><th class="n">η 3 kW</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      </div>
+      <p class="note">G-A1 at 3 kW: 12.2 N·m shaft torque, 63.8 A rms phase current. Stretch converter means 5 devices per switch at 0.25 mΩ, 16 kHz, 0.25 mΩ inductors.</p>
+    </section>
+    <section class="block">
+      <h2>How sure is this</h2>
+      <ul class="plain">
+        <li>98% is reached only with the stretch converter, by 1.05 W at 2.4 kW and 0.47 W at 3 kW. That margin is smaller than the model's own uncertainty.</li>
+        <li>Windage is the least certain term. If it is 50% higher than the Daily-Nece scaling predicts, loss rises 5.9 W and the design lands at 97.8%.</li>
+        <li>The field model is 2D Fourier with a fringing factor. The thicker gap and stator make 3D FEA more important here than it was for Rev 3.1.</li>
+        <li>Rev 3.1 text gives 2.05 mWb flux per pole. Its own 0.742 T face field gives 1.23 mWb, which matches its 1.25 T back-iron claim. Treat 2.05 as a source error.</li>
+      </ul>
+      <div class="scroll">
+      <table>
+        <thead><tr><th>Sensitivity on G-A1</th><th class="n">Δ loss at 2.4 kW</th></tr></thead>
+        <tbody id="sens"></tbody>
+      </table>
+      </div>
+    </section>
+  </div>
+
+  <section class="block">
+    <h2>Gates before metal is cut</h2>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Gate</th><th>Evidence needed</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Model reproduction</td><td>Rev 3.1 baseline reproduced from geometry</td><td class="status yes">Done, analytical, 132.6 W vs 133 W</td></tr>
+        <tr><td>3D field</td><td>Magnetostatic FEA of one pole pair at 16.8 mm gap: B1 0.794 T at mean radius ±6%, 5.2 kN pull</td><td class="status no">Not run</td></tr>
+        <tr><td>Windage</td><td>Spin-down of a dummy Ø260 rotor pair with shroud, no magnets: ≤ 12 W at 2,400 RPM</td><td class="status no">Not run</td></tr>
+        <tr><td>Winding coupon</td><td>One coil of 0.10 mm Litz: hot resistance, fill ≥ 0.42, AC loss at 240 Hz</td><td class="status no">Not run</td></tr>
+        <tr><td>Converter bench</td><td>Complete AFE at 51 A rms: ≤ 13.6 W, or ≤ 9.4 W for the stretch version</td><td class="status no">Not run</td></tr>
+        <tr><td>Rotor structure</td><td>Stress and retention FEA at 2,800 RPM overspeed: 1.8 kN per magnet</td><td class="status no">Not run</td></tr>
+        <tr><td>Hardware η</td><td>Torque × speed vs V × I after a 60 min soak, ±0.2 point uncertainty</td><td class="status no">Not run</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+const RESULTS = [
+  { name: "Rev 3.1 (reproduced)", cu: 65.99, ac: 6.96, mag: 0, wind: 7.2, brg: 8.0, conv: 44.42, t: 132.57, t3: 191.36 },
+  { name: "G-A1", cu: 16.91, ac: 2.81, mag: 2.0, wind: 11.72, brg: 5.12, conv: 13.63, t: 52.19, t3: 66.65, hl: true },
+  { name: "G-A1 + stretch converter", cu: 16.85, ac: 2.81, mag: 2.0, wind: 11.72, brg: 5.12, conv: 9.43, t: 47.93, t3: 60.76, hl: true },
+  { name: "G-B 16/12, same envelope", cu: 18.02, ac: 4.34, mag: 2.0, wind: 11.72, brg: 5.12, conv: 13.61, t: 54.83, t3: 69.91 },
+  { name: "G-C 2 stators, 3 rotors", cu: 17.13, ac: 3.20, mag: 2.0, wind: 12.77, brg: 5.12, conv: 13.60, t: 53.82, t3: 68.38 }
+];
+const SENS = [
+  ["Windage 50% above model", 5.86], ["N45SH magnets instead", 3.73], ["0.16 mm strands instead of 0.10", 3.87],
+  ["No windage shroud", 2.93], ["Rev 3.1 bearings", 2.88], ["Gap 1.2 mm each side", -0.67],
+  ["Stretch converter", -4.26], ["Rev 3.1 converter", 28.0]
+];
+const SEGS = [["cu", "Copper DC", "--b-cu"], ["ac", "Strand eddy", "--b-ac"], ["mag", "Magnets", "--b-mag"],
+              ["wind", "Windage", "--b-wind"], ["brg", "Bearings", "--b-brg"], ["conv", "Converter", "--b-conv"]];
+
+const eff = (p, l) => (100 * p / (p + l)).toFixed(2) + "%";
+const tb = document.querySelector("#results tbody");
+RESULTS.forEach(r => {
+  const tr = document.createElement("tr"); if (r.hl) tr.className = "hl";
+  tr.innerHTML = `<td>${r.name}</td><td class="n">${r.t.toFixed(1)} W</td><td class="n">${eff(2400, r.t)}</td><td class="n">${r.t3.toFixed(1)} W</td><td class="n">${eff(3000, r.t3)}</td>`;
+  tb.appendChild(tr);
+});
+const sb = document.getElementById("sens");
+SENS.forEach(([k, v]) => { const tr = document.createElement("tr"); tr.innerHTML = `<td>${k}</td><td class="n">${v > 0 ? "+" : ""}${v.toFixed(1)} W</td>`; sb.appendChild(tr); });
+
+function drawChart() {
+  const svg = document.getElementById("lossChart");
+  const css = getComputedStyle(document.documentElement);
+  const L = 190, R = 740, top = 16, bh = 30, gap = 14, max = 140;
+  const x = v => L + (R - L) * v / max;
+  let s = "";
+  for (let v = 0; v <= max; v += 20) {
+    s += `<line x1="${x(v)}" x2="${x(v)}" y1="${top - 6}" y2="${top + RESULTS.length * (bh + gap)}" stroke="${css.getPropertyValue('--rule')}" stroke-width="1"/>`;
+    s += `<text x="${x(v)}" y="${top + RESULTS.length * (bh + gap) + 14}" text-anchor="middle">${v} W</text>`;
+  }
+  RESULTS.forEach((r, i) => {
+    const y = top + i * (bh + gap);
+    let acc = 0;
+    SEGS.forEach(([k, , tok]) => {
+      const w = x(acc + r[k]) - x(acc);
+      if (w > 0) s += `<rect x="${x(acc)}" y="${y}" width="${w}" height="${bh}" fill="${css.getPropertyValue(tok)}"/>`;
+      acc += r[k];
+    });
+    s += `<text class="lbl" x="${L - 10}" y="${y + bh / 2 + 4}" text-anchor="end">${r.name}</text>`;
+    s += `<text x="${x(acc) + 6}" y="${y + bh / 2 + 4}" fill="${css.getPropertyValue('--ink')}">${r.t.toFixed(1)} W</text>`;
+  });
+  const cx = x(48.98);
+  s += `<line x1="${cx}" x2="${cx}" y1="${top - 8}" y2="${top + RESULTS.length * (bh + gap) - gap + 4}" stroke="${css.getPropertyValue('--bad')}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  s += `<text x="${cx + 4}" y="${top - 1}" fill="${css.getPropertyValue('--bad')}">98.0% ceiling 48.98 W</text>`;
+  svg.innerHTML = s;
+  document.getElementById("keys").innerHTML = SEGS.map(([, n, tok]) => `<span><i class="sw" style="background:var(${tok})"></i>${n}</span>`).join("");
+}
+drawChart();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawChart);
+new MutationObserver(drawChart).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+// ---------------- 3D viewer
+(function () {
+  const loadingEl = document.getElementById("loading");
+  if (!window.THREE || !THREE.GLTFLoader) { loadingEl.textContent = "3D viewer could not load its library. The data below is unaffected."; return; }
+  const canvas = document.getElementById("c");
+  const vp = canvas.parentElement;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.localClippingEnabled = true;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.01, 20);
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  const target = new THREE.Vector3(0.115, -0.01, 0);
+  controls.target.copy(target);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x6b7380, 0.75));
+  const key = new THREE.DirectionalLight(0xffffff, 0.9); key.position.set(-0.6, 1.0, 0.9); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.35); fill.position.set(0.9, 0.2, -0.8); scene.add(fill);
+
+  const clip = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+  const nodes = []; const groups = {};
+  const SPIN = new Set(["Rotor 1", "Rotor 2", "Shaft line"]);
+  let explode = 0, spinning = false, sectioned = false, angle = 0;
+
+  function setView(kind) {
+    const d = 0.95;
+    const dirs = { iso: [-0.55, 0.45, 0.75], axial: [-1, 0.08, 0.02], side: [0, 0.05, 1] };
+    const v = new THREE.Vector3(...dirs[kind]).normalize().multiplyScalar(d);
+    camera.position.copy(target).add(v); controls.target.copy(target); controls.update();
+  }
+  ["iso", "axial", "side"].forEach(k => document.getElementById("v-" + k).addEventListener("click", () => setView(k)));
+
+  function resize() {
+    const w = vp.clientWidth, h = vp.clientHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(vp);
+
+  new THREE.GLTFLoader().load("afpmg-rev-ga1.gltf.json", gltf => {
+    gltf.scene.traverse(o => {
+      if (!o.isMesh) return;
+      const ud = o.userData || {};
+      o.material.clippingPlanes = [];
+      o.material.side = THREE.DoubleSide;
+      if (o.material.transparent) o.material.depthWrite = false;
+      o.userData.base = o.position.clone();
+      o.userData.ex = new THREE.Vector3(...(ud.explode || [0, 0, 0]));
+      nodes.push(o);
+      (groups[ud.group || "Other"] ||= []).push(o);
+    });
+    scene.add(gltf.scene);
+    const lay = document.getElementById("layers");
+    Object.keys(groups).forEach((g, i) => {
+      const id = "lay-" + i;
+      const lab = document.createElement("label");
+      lab.innerHTML = `<input type="checkbox" id="${id}" checked> ${g}`;
+      lab.querySelector("input").addEventListener("change", e => groups[g].forEach(o => o.visible = e.target.checked));
+      lay.appendChild(lab);
+    });
+    loadingEl.hidden = true;
+    resize(); setView("iso");
+  }, undefined, () => { loadingEl.textContent = "The model file did not load. Reload the page to try again."; });
+
+  document.getElementById("explode").addEventListener("input", e => { explode = +e.target.value; });
+  const secBtn = document.getElementById("t-section");
+  secBtn.addEventListener("click", () => {
+    sectioned = !sectioned; secBtn.setAttribute("aria-pressed", sectioned);
+    nodes.forEach(o => { o.material.clippingPlanes = sectioned ? [clip] : []; o.material.needsUpdate = true; });
+  });
+  const spinBtn = document.getElementById("t-spin");
+  spinBtn.addEventListener("click", () => { spinning = !spinning; spinBtn.setAttribute("aria-pressed", spinning); });
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) spinBtn.title = "Rotation is slow when reduced motion is on";
+
+  const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(), pickEl = document.getElementById("pick");
+  let down = null;
+  canvas.addEventListener("pointerdown", e => { down = [e.clientX, e.clientY]; });
+  canvas.addEventListener("pointerup", e => {
+    if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 4) return;
+    const r = canvas.getBoundingClientRect();
+    ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ptr, camera);
+    const hits = ray.intersectObjects(nodes.filter(o => o.visible), false)
+      .filter(h => !sectioned || h.point.z <= 0.0005)
+      .filter(h => !(h.object.material.transparent && h.object.material.opacity < 0.2));
+    pickEl.textContent = hits.length ? hits[0].object.name : "Click a part to name it";
+  });
+
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  (function tick() {
+    requestAnimationFrame(tick);
+    if (spinning) angle += reduce ? 0.004 : 0.03;
+    nodes.forEach(o => {
+      o.position.copy(o.userData.base).addScaledVector(o.userData.ex, explode);
+      o.rotation.x = SPIN.has(o.userData.group) ? angle : 0;
+    });
+    controls.update(); renderer.render(scene, camera);
+  })();
+})();
+</script>
